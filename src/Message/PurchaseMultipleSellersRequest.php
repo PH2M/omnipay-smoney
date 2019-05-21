@@ -1,10 +1,14 @@
 <?php
+
 namespace Omnipay\Smoney\Message;
+
+use Magento\Sales\Model\Order\Item;
+
 /**
  * Class PurchaseRequest
  * @package Omnipay\Smoney\Message
  */
-class PurchaseRequest extends AbstractRequest
+class PurchaseMultipleSellersRequest extends AbstractRequest
 {
     /**
      * Get the raw data array for this message. The format of this varies from gateway to
@@ -25,27 +29,50 @@ class PurchaseRequest extends AbstractRequest
             'customerEmail',
             'appAccountId'
         );
+
+        $payments = $this->getPaymentsData();
+
         $data = [
             'accessToken'       => $this->getToken(),
-            'amount'            => $this->getParameter('amount'),
             'orderId'           => $this->getTransactionId(),
             'availableCards'    => 'CB',
-            'beneficiary'       => [
-                'appaccountid'  => $this->getAppAccountId()
-            ],
+            'payments'          => $payments,
             'message'           => $this->getDescription(),
             'ismine'            => false,
             'Require3DS'        => true,
-            'urlReturn'         => $this->getCancelUrl(),
-            'urlCallback'       => $this->getReturnUrl(),
-            'fee'               => 0,
             'payerInfo'         => [
                 'Name'          => $this->getCustomerName(),
                 'Mail'          => $this->getCustomerEmail()
-            ]
+            ],
+            'urlReturn'         => $this->getCancelUrl(),
+            'urlCallback'       => $this->getReturnUrl()
         ];
+
         return $data;
     }
+
+    /**
+     * @return array
+     */
+    public function getPaymentsData()
+    {
+        $amounts = unserialize($this->getParameter('amount'));
+        $items = [];
+        $i = 1;
+
+        foreach ($amounts as $key => $amount) {
+            $items[] = [
+                'orderId'       => $this->getTransactionId() . '-' . $i,
+                'beneficiary'   => ['appaccountid' => $key],
+                'amount'        => $amount,
+                'fee'           => 0,
+            ];
+            $i++;
+        }
+
+        return $items;
+    }
+
     /**
      * @return string
      */
@@ -53,6 +80,7 @@ class PurchaseRequest extends AbstractRequest
     {
         return $this->endpoint . '/payins/cardpayments';
     }
+
     /**
      * @return string
      */
@@ -60,6 +88,7 @@ class PurchaseRequest extends AbstractRequest
     {
         return $this->getParameter('customerName');
     }
+
     /**
      * @param $customerName
      * @return PurchaseRequest
@@ -68,6 +97,7 @@ class PurchaseRequest extends AbstractRequest
     {
         return $this->setParameter('customerName', $customerName);
     }
+
     /**
      * @return string
      */
@@ -75,6 +105,7 @@ class PurchaseRequest extends AbstractRequest
     {
         return $this->getParameter('customerEmail');
     }
+
     /**
      * @param $customerEmail
      * @return PurchaseRequest
@@ -83,6 +114,7 @@ class PurchaseRequest extends AbstractRequest
     {
         return $this->setParameter('customerEmail', $customerEmail);
     }
+
     /**
      * @return string
      */
@@ -90,6 +122,7 @@ class PurchaseRequest extends AbstractRequest
     {
         return $this->getParameter('appAccountId');
     }
+
     /**
      * @param $appAccountId
      * @return PurchaseRequest

@@ -39,4 +39,13 @@ class Gateway extends AbstractGateway
     {
         return $this->createRequest('\Omnipay\Smoney\Message\PurchaseRequest', $parameters);
     }
+
+    /**
+     * @param array $parameters
+     * @return Message\PurchaseMultipleSellersRequest
+     */
+    public function purchaseWithMultipleSellers(array $parameters = array())
+    {
+        return $this->createRequest('\Omnipay\Smoney\Message\PurchaseMultipleSellersRequest', $parameters);
+    }
 }
